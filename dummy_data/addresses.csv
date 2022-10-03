@@ -1,0 +1,1 @@
+patient_id,address_id,start_date,end_date,address_type,rural_urban_classification,imd_rounded,msoa_code,has_postcode,care_home_is_potential_match,care_home_requires_nursing,care_home_does_not_require_nursing
