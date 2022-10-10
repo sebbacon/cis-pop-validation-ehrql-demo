@@ -1,1 +1,10 @@
 patient_id,start_date,end_date,practice_pseudo_id,practice_stp,practice_nuts1_region_name
+1,2018-01-01,2022-01-01,1,1,practice1
+2,2018-01-01,2022-01-01,1,1,practice1
+3,2018-01-01,2022-01-01,2,2,practice2
+4,2018-01-01,2022-01-01,2,2,practice2
+5,2018-01-01,2022-01-01,2,2,practice2
+6,2018-01-01,2022-01-01,3,3,practice3
+7,2018-01-01,2022-01-01,3,3,practice3
+9,2018-01-01,2022-01-01,3,3,practice3
+
