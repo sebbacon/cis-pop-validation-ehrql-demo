@@ -1,3 +1,4 @@
+from analysis.variable_lib import age_as_of
 from databuilder.ehrql import Dataset, case, codelist_from_csv, when
 from databuilder.tables.beta.tpp import (
     patients,
@@ -5,17 +6,20 @@ from databuilder.tables.beta.tpp import (
     sgss_covid_all_tests,
 )
 from datetime import date
+index_date = date(2022, 6, 1)
 
 dataset = Dataset()
 
 # Define and extract dataset variables ----
 # Demographic variables
 dataset.sex = patients.sex
-dataset.age = patients.date_of_birth.difference_in_years(date.today())
-# TODO age_kids, agebandCIS
-# https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L94-L112
-# TODO has_died
+dataset.age = age_as_of(index_date)
+
+# TODO this is not exactly the same as died_from_any_cause(). This function only checks whether there is a date of death
+# in the patients table
 # https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L59-L62
+dataset.has_died = patients.date_of_death.is_not_null() & (patients.date_of_death < index_date)
+
 # TODO care_home_tpp, care_home_code
 # https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L64-L83
 # TODO msoa
