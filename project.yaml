@@ -5,7 +5,7 @@ expectations:
 
 actions:
 
-  generate_study_population:
+  generate_dataset:
     # The final line of arguments are workarounds for the fact that we don't
     # have dummy data working yet, so don't worry about exactly what they're
     # doing.
