@@ -1,4 +1,4 @@
-from analysis.variable_lib import age_as_of
+from analysis.variable_lib import age_as_of, has_died
 from databuilder.ehrql import Dataset, case, codelist_from_csv, when
 from databuilder.tables.beta.tpp import (
     patients,
@@ -14,11 +14,8 @@ dataset = Dataset()
 # Demographic variables
 dataset.sex = patients.sex
 dataset.age = age_as_of(index_date)
+dataset.has_died = has_died(index_date)
 
-# TODO this is not exactly the same as died_from_any_cause(). This function only checks whether there is a date of death
-# in the patients table
-# https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L59-L62
-dataset.has_died = patients.date_of_death.is_not_null() & (patients.date_of_death < index_date)
 
 # TODO care_home_tpp, care_home_code
 # https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L64-L83
@@ -53,11 +50,11 @@ dataset.has_died = patients.date_of_death.is_not_null() & (patients.date_of_deat
 
 # Define dataset restrictions ----
 set_registered = practice_registrations.exists_for_patient()
-set_sex_not_null = dataset.sex.is_not_null()
 set_sex_fm = (dataset.sex == "F") | (dataset.sex == "M")
 set_age_ge2_le120 = (dataset.age >= 2) & (dataset.age <= 120)
+set_has_not_died = ~dataset.has_died
 
 # Set dataset population ----
 dataset.set_population(
-    set_registered & set_sex_not_null & set_sex_fm & set_age_ge2_le120
+    set_registered & set_sex_fm & set_age_ge2_le120 & set_has_not_died
 )
