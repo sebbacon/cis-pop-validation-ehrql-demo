@@ -30,11 +30,11 @@
       "downloaded_at": "2022-10-10 11:03:49.943068Z",
       "sha": "3d2f3998b71863a80b24d60f6f4282e14191ae13"
     },
-    "primis-covid19-vacc-uptake-carehome.csv": {
-      "id": "primis-covid19-vacc-uptake/carehome/v1",
-      "url": "https://codelists.opensafely.org/codelist/primis-covid19-vacc-uptake/carehome/v1/",
-      "downloaded_at": "2022-10-10 11:03:50.185908Z",
-      "sha": "0543cdba73cfc6b892a94aad94beb7b4fd0ce8bb"
+    "primis-covid19-vacc-uptake-longres.csv": {
+      "id": "primis-covid19-vacc-uptake/longres/v1",
+      "url": "https://codelists.opensafely.org/codelist/primis-covid19-vacc-uptake/longres/v1/",
+      "downloaded_at": "2022-10-14 12:07:08.676615Z",
+      "sha": "4d4c94b9c6aa267c6a60657150bbc5ec7d2d7625"
     }
   }
 }

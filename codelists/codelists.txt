@@ -3,5 +3,4 @@ opensafely/covid-identification-in-primary-care-probable-covid-positive-test/508
 opensafely/covid-identification-in-primary-care-probable-covid-clinical-code/2020-07-16
 opensafely/covid-identification-in-primary-care-probable-covid-sequelae/2020-07-16
 opensafely/ethnicity/2020-04-27
-primis-covid19-vacc-uptake/carehome/v1
-
+primis-covid19-vacc-uptake/longres/v1
