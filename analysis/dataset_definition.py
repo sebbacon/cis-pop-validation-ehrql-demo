@@ -1,20 +1,49 @@
-from analysis.variable_lib import age_as_of, has_died
+from analysis.variable_lib import age_as_of, has_died, address_as_of
 from databuilder.ehrql import Dataset, case, codelist_from_csv, when
 from databuilder.tables.beta.tpp import (
     patients,
     practice_registrations,
     sgss_covid_all_tests,
+    clinical_events,
+    addresses,
+    hospital_admissions,
+    emergency_care_attendances,
 )
 from datetime import date
+import codelists
+
+
+def has_prior_event(codelist, where=True):
+    return (
+        prior_events.take(where)
+        .take(prior_events.snomedct_code.is_in(codelist))
+        .exists_for_patient()
+    )
+
+
+# Set index date
+# TODO this is just an example for testing
 index_date = date(2022, 6, 1)
 
+
 dataset = Dataset()
+address = address_as_of(index_date)
+prior_events = clinical_events.take(clinical_events
+                                    .date.is_on_or_before(index_date))
 
 # Define and extract dataset variables ----
 # Demographic variables
 dataset.sex = patients.sex
 dataset.age = age_as_of(index_date)
 dataset.has_died = has_died(index_date)
+
+# TPP care home flag
+dataset.care_home_tpp = case(
+    when(address.care_home_is_potential_match).then(True), default=False
+)
+
+# Patients in long-stay nursing and residential care
+dataset.care_home_code = has_prior_event(codelists.carehome)
 
 
 # TODO care_home_tpp, care_home_code
