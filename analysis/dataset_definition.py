@@ -1,5 +1,11 @@
-from analysis.variable_lib import age_as_of, has_died, address_as_of
-from databuilder.ehrql import Dataset, case, codelist_from_csv, when
+from analysis.variable_lib import (
+    age_as_of,
+    has_died,
+    address_as_of,
+    practice_registration_as_of,
+)
+
+from databuilder.ehrql import Dataset, case, when
 from databuilder.tables.beta.tpp import (
     patients,
     practice_registrations,
@@ -45,13 +51,16 @@ dataset.care_home_tpp = case(
 # Patients in long-stay nursing and residential care
 dataset.care_home_code = has_prior_event(codelists.carehome)
 
+# Middle Super Output Area
+dataset.msoa = address.msoa_code
 
-# TODO care_home_tpp, care_home_code
-# https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L64-L83
-# TODO msoa
-# https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L213-L223
-# TODO region
-# https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L248-L270
+practice_reg = practice_registration_as_of(index_date)
+
+# STP is an NHS administration region based on geography
+dataset.stp = practice_reg.practice_stp
+
+# NHS administrative region
+dataset.region = practice_reg.practice_nuts1_region_name
 
 # Single-day events (Did any event occur on this day?) ----
 # https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L300-L369

@@ -33,3 +33,16 @@ def address_as_of(date):
         addr.address_id,
     )
     return ordered.first_for_patient()
+
+
+def _registrations_overlapping_period(start_date, end_date):
+    regs = schema.practice_registrations
+    return regs.take(
+        regs.start_date.is_on_or_before(start_date)
+        & (regs.end_date.is_after(end_date) | regs.end_date.is_null())
+    )
+
+
+def practice_registration_as_of(date):
+    regs = _registrations_overlapping_period(date, date)
+    return regs.sort_by(regs.start_date, regs.end_date).first_for_patient()
