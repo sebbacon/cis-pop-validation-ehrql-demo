@@ -1,22 +1,15 @@
-from analysis.variable_lib import (
-    age_as_of,
-    has_died,
-    address_as_of,
-    practice_registration_as_of,
-)
+from datetime import date
 
 from databuilder.ehrql import Dataset, case, when
-from databuilder.tables.beta.tpp import (
-    patients,
-    practice_registrations,
-    sgss_covid_all_tests,
-    clinical_events,
-    addresses,
-    hospital_admissions,
-    emergency_care_attendances,
-)
-from datetime import date
+from databuilder.tables.beta.tpp import (addresses, clinical_events,
+                                         emergency_care_attendances,
+                                         hospital_admissions, patients,
+                                         practice_registrations,
+                                         sgss_covid_all_tests)
+
 import codelists
+from analysis.variable_lib import (address_as_of, age_as_of, has_died,
+                                   practice_registration_as_of)
 
 
 def has_prior_event(codelist, where=True):
@@ -34,8 +27,7 @@ index_date = date(2022, 6, 1)
 
 dataset = Dataset()
 address = address_as_of(index_date)
-prior_events = clinical_events.take(clinical_events
-                                    .date.is_on_or_before(index_date))
+prior_events = clinical_events.take(clinical_events.date.is_on_or_before(index_date))
 
 # Define and extract dataset variables ----
 # Demographic variables
@@ -92,7 +84,7 @@ set_sex_fm = (dataset.sex == "F") | (dataset.sex == "M")
 set_age_ge2_le120 = (dataset.age >= 2) & (dataset.age <= 120)
 set_has_not_died = ~dataset.has_died
 
-# Set dataset population ----
+# Set study population ----
 dataset.set_population(
     set_registered & set_sex_fm & set_age_ge2_le120 & set_has_not_died
 )
