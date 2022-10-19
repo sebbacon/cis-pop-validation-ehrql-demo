@@ -20,24 +20,35 @@ def has_prior_event(codelist, where=True):
     )
 
 
-# Set index date
-# TODO this is just an example for testing
+# Set index date ----
+# TODO this is just an example for testing, something like --index-date-range
+# needs to be added https://github.com/opensafely-core/databuilder/issues/741
 index_date = date(2022, 6, 1)
 
 
+# Initialize dataset ----
 dataset = Dataset()
+
+# Extract some variables into separate objects
 address = address_as_of(index_date)
-prior_events = clinical_events.take(clinical_events.date.is_on_or_before(index_date))
+prior_events = clinical_events.take(
+    clinical_events.date.is_on_or_before(index_date)
+    )
 
 # Define and extract dataset variables ----
 # Demographic variables
 dataset.sex = patients.sex
 dataset.age = age_as_of(index_date)
 dataset.has_died = has_died(index_date)
+practice_reg = practice_registration_as_of(index_date)
+prior_tests = sgss_covid_all_tests.take(
+    sgss_covid_all_tests.specimen_taken_date.is_on_or_before(index_date)
+)
 
 # TPP care home flag
 dataset.care_home_tpp = case(
-    when(address.care_home_is_potential_match).then(True), default=False
+    when(address.care_home_is_potential_match).then(True),
+    default=False
 )
 
 # Patients in long-stay nursing and residential care
@@ -45,8 +56,6 @@ dataset.care_home_code = has_prior_event(codelists.carehome)
 
 # Middle Super Output Area
 dataset.msoa = address.msoa_code
-
-practice_reg = practice_registration_as_of(index_date)
 
 # STP is an NHS administration region based on geography
 dataset.stp = practice_reg.practice_stp
@@ -56,6 +65,11 @@ dataset.region = practice_reg.practice_nuts1_region_name
 
 # Single-day events (Did any event occur on this day?) ----
 # https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L300-L369
+dataset.postest_01 = prior_tests.take(
+    prior_tests.specimen_taken_date == index_date
+    ).sort_by(prior_tests.specimen_taken_date).first_for_patient().is_positive
+
+
 # TODO positive covid test: postest_01
 # TODO positive case identification: primary_care_covid_case_01
 # TODO emergency attendance for covid: covidemergency_01
@@ -80,7 +94,7 @@ dataset.region = practice_reg.practice_nuts1_region_name
 
 # Define dataset restrictions ----
 set_registered = practice_registrations.exists_for_patient()
-set_sex_fm = (dataset.sex == "F") | (dataset.sex == "M")
+set_sex_fm = (dataset.sex == "female") | (dataset.sex == "male")
 set_age_ge2_le120 = (dataset.age >= 2) & (dataset.age <= 120)
 set_has_not_died = ~dataset.has_died
 
