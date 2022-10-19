@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from databuilder.ehrql import Dataset, case, when
 from databuilder.tables.beta.tpp import (addresses, clinical_events,
@@ -66,8 +66,8 @@ dataset.region = practice_reg.practice_nuts1_region_name
 # Single-day events (Did any event occur on this day?) ----
 # https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L300-L369
 dataset.postest_01 = prior_tests.take(
-    prior_tests.specimen_taken_date == index_date
-    ).sort_by(prior_tests.specimen_taken_date).first_for_patient().is_positive
+    (prior_tests.specimen_taken_date == index_date) & (prior_tests.is_positive)
+    ).exists_for_patient()
 
 # TODO positive case identification: primary_care_covid_case_01
 # TODO emergency attendance for covid: covidemergency_01
@@ -76,7 +76,11 @@ dataset.postest_01 = prior_tests.take(
 
 # 14-day events (Did any event occur within the last 14 days?) ----
 # https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L372-L443
-# TODO positive covid test: postest_14
+dataset.postest_14 = prior_tests.take(
+    (prior_tests.specimen_taken_date >= (index_date - timedelta(days=14))) &
+    (prior_tests.specimen_taken_date <= index_date) &
+    (prior_tests.is_positive)
+    ).exists_for_patient()
 # TODO positive case identification: primary_care_covid_case_14
 # TODO emergency attendance for covid: covidemergency_14
 # TODO covid admission: covidadmitted_14
@@ -84,7 +88,10 @@ dataset.postest_01 = prior_tests.take(
 
 # Ever-day events (Did any event occur any time up to and including this day?) ----
 # https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L445-L517
-# TODO positive covid test: postest_ever
+dataset.postest_ever = prior_tests.take(
+    (prior_tests.specimen_taken_date <= index_date) &
+    (prior_tests.is_positive)
+    ).exists_for_patient()
 # TODO positive case identification: primary_care_covid_case_ever
 # TODO emergency attendance for covid: covidemergency_ever
 # TODO covid admission: covidadmitted_ever
