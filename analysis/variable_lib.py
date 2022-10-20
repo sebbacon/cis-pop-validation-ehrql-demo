@@ -1,5 +1,12 @@
+import operator
+from functools import reduce
+
 from databuilder.ehrql import case, when
 from databuilder.tables.beta import tpp as schema
+
+
+def any_of(conditions):
+    return reduce(operator.or_, conditions)
 
 
 def age_as_of(date):
@@ -47,3 +54,11 @@ def _registrations_overlapping_period(start_date, end_date):
 def practice_registration_as_of(date):
     regs = _registrations_overlapping_period(date, date)
     return regs.sort_by(regs.start_date, regs.end_date).first_for_patient()
+
+
+def emergency_care_diagnosis_matches(emergency_care_attendances, codelist):
+    conditions = [
+        getattr(emergency_care_attendances, column_name).is_in(codelist)
+        for column_name in [f"diagnosis_{i:02d}" for i in range(1, 25)]
+    ]
+    return emergency_care_attendances.take(any_of(conditions))

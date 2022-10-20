@@ -10,7 +10,8 @@ from databuilder.tables.beta.tpp import (addresses, clinical_events,
 
 import codelists
 from analysis.variable_lib import (address_as_of, age_as_of, has_died,
-                                   practice_registration_as_of)
+                                   practice_registration_as_of,
+                                   emergency_care_diagnosis_matches)
 
 
 def has_prior_event(codelist, where=True):
@@ -95,6 +96,12 @@ dataset.primary_care_covid_case_01 = primary_care_covid_events.take(
     ).exists_for_patient()
 
 # TODO emergency attendance for covid: covidemergency_01
+dataset.covidemergency_01 = emergency_care_diagnosis_matches(
+    emergency_care_attendances, codelists.covid_emergency).take(
+        emergency_care_attendances.arrival_date == index_date
+        ).exists_for_patient()
+
+
 # TODO covid admission: covidadmitted_01
 # TODO composite measure: any_infection_or_disease_01
 
@@ -111,7 +118,13 @@ dataset.primary_care_covid_case_14 = primary_care_covid_events.take(
     (clinical_events.date >= (index_date - timedelta(days=14))) &
     (clinical_events.date <= index_date)
     ).exists_for_patient()
-# TODO emergency attendance for covid: covidemergency_14
+
+# TODO emergency attendance for covid:
+dataset.covidemergency_14 = emergency_care_diagnosis_matches(
+    emergency_care_attendances, codelists.covid_emergency).take(
+        (emergency_care_attendances.arrival_date >= (index_date - timedelta(days=14))) &
+        (emergency_care_attendances.arrival_date <= index_date)
+        ).exists_for_patient()
 # TODO covid admission: covidadmitted_14
 # TODO composite measure: any_infection_or_disease_14
 
@@ -125,9 +138,14 @@ dataset.postest_ever = prior_tests.take(
 dataset.primary_care_covid_case_ever = primary_care_covid_events.take(
     (clinical_events.date <= index_date)
     ).exists_for_patient()
-# TODO emergency attendance for covid: covidemergency_ever
+# TODO emergency attendance for covid:
+dataset.covidemergency_ever = emergency_care_diagnosis_matches(
+    emergency_care_attendances, codelists.covid_emergency).take(
+        (emergency_care_attendances.arrival_date <= index_date)
+        ).exists_for_patient()
+
 # TODO covid admission: covidadmitted_ever
-# TODO composite measure: any_infection_or_disease_ever
+# TODO composite variable: any_infection_or_disease_ever
 
 # Define dataset restrictions ----
 set_registered = practice_registrations.exists_for_patient()
