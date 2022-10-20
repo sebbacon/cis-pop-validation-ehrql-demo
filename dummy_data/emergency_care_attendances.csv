@@ -1,1 +1,4 @@
 patient_id,id,arrival_date,discharge_destination,diagnosis_01,diagnosis_02,diagnosis_03,diagnosis_04,diagnosis_05,diagnosis_06,diagnosis_07,diagnosis_08,diagnosis_09,diagnosis_10,diagnosis_11,diagnosis_12,diagnosis_13,diagnosis_14,diagnosis_15,diagnosis_16,diagnosis_17,diagnosis_18,diagnosis_19,diagnosis_20,diagnosis_21,diagnosis_22,diagnosis_23,diagnosis_24
+2,1,2022-06-01,XYZ,1240751000000100,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X
+3,1,2022-05-21,XYZ,A,B,C,D,E,F,G,H,I,J,K,L,1240751000000100,N,O,P,Q,R,S,T,U,V,W,X
+7,1,2021-01-01,XYZ,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,1240751000000100
