@@ -36,7 +36,10 @@ def test_dataset_definition():
         "covidemergency_01": "T",
         "covidemergency_14": "T",
         "covidemergency_ever": "T",
-        }
+        "covidadmitted_01": "T",
+        "covidadmitted_14": "T",
+        "covidadmitted_ever": "T",
+    }
     assert pt3 == {
         "patient_id": 3,
         "sex": "female",
@@ -56,7 +59,10 @@ def test_dataset_definition():
         "covidemergency_01": "F",
         "covidemergency_14": "T",
         "covidemergency_ever": "T",
-        }
+        "covidadmitted_01": "F",
+        "covidadmitted_14": "T",
+        "covidadmitted_ever": "T",
+    }
     assert pt7 == {
         "patient_id": 7,
         "sex": "male",
@@ -76,4 +82,7 @@ def test_dataset_definition():
         "covidemergency_01": "F",
         "covidemergency_14": "F",
         "covidemergency_ever": "F",
-        }
+        "covidadmitted_01": "F",
+        "covidadmitted_14": "F",
+        "covidadmitted_ever": "T",
+    }
