@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from databuilder.codes import Codelist
 
 from databuilder.ehrql import Dataset, case, when
 from databuilder.tables.beta.tpp import (addresses, clinical_events,
@@ -20,6 +21,13 @@ def has_prior_event(codelist, where=True):
     )
 
 
+def combine_codelists(*codelists):
+    codes = set()
+    for codelist in codelists:
+        codes.update(codelist.codes)
+    return Codelist(codes=codes, category_maps={})
+
+
 # Set index date ----
 # TODO this is just an example for testing, something like --index-date-range
 # needs to be added https://github.com/opensafely-core/databuilder/issues/741
@@ -31,6 +39,19 @@ dataset = Dataset()
 
 # Extract some variables into separate objects
 address = address_as_of(index_date)
+
+
+primary_care_covid_events = clinical_events.take(
+    clinical_events.ctv3_code.is_in(
+        combine_codelists(
+            codelists.covid_primary_care_code,
+            codelists.covid_primary_care_positive_test,
+            codelists.covid_primary_care_sequelae,
+        )
+    )
+)
+
+
 prior_events = clinical_events.take(
     clinical_events.date.is_on_or_before(index_date)
     )
@@ -69,7 +90,10 @@ dataset.postest_01 = prior_tests.take(
     (prior_tests.specimen_taken_date == index_date) & (prior_tests.is_positive)
     ).exists_for_patient()
 
-# TODO positive case identification: primary_care_covid_case_01
+dataset.primary_care_covid_case_01 = primary_care_covid_events.take(
+    (clinical_events.date == index_date)
+    ).exists_for_patient()
+
 # TODO emergency attendance for covid: covidemergency_01
 # TODO covid admission: covidadmitted_01
 # TODO composite measure: any_infection_or_disease_01
@@ -81,7 +105,12 @@ dataset.postest_14 = prior_tests.take(
     (prior_tests.specimen_taken_date <= index_date) &
     (prior_tests.is_positive)
     ).exists_for_patient()
-# TODO positive case identification: primary_care_covid_case_14
+
+# TODO positive case identification:
+dataset.primary_care_covid_case_14 = primary_care_covid_events.take(
+    (clinical_events.date >= (index_date - timedelta(days=14))) &
+    (clinical_events.date <= index_date)
+    ).exists_for_patient()
 # TODO emergency attendance for covid: covidemergency_14
 # TODO covid admission: covidadmitted_14
 # TODO composite measure: any_infection_or_disease_14
@@ -92,7 +121,10 @@ dataset.postest_ever = prior_tests.take(
     (prior_tests.specimen_taken_date <= index_date) &
     (prior_tests.is_positive)
     ).exists_for_patient()
-# TODO positive case identification: primary_care_covid_case_ever
+# TODO positive case identification:
+dataset.primary_care_covid_case_ever = primary_care_covid_events.take(
+    (clinical_events.date <= index_date)
+    ).exists_for_patient()
 # TODO emergency attendance for covid: covidemergency_ever
 # TODO covid admission: covidadmitted_ever
 # TODO composite measure: any_infection_or_disease_ever
