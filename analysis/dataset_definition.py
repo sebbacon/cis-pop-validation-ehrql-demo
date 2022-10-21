@@ -1,6 +1,6 @@
 from datetime import date, timedelta
-from databuilder.codes import Codelist
 
+from databuilder.codes import Codelist
 from databuilder.ehrql import Dataset, case, when
 from databuilder.tables.beta.tpp import (
     addresses,
@@ -16,10 +16,10 @@ import codelists
 from analysis.variable_lib import (
     address_as_of,
     age_as_of,
-    has_died,
-    practice_registration_as_of,
     emergency_care_diagnosis_matches,
+    has_died,
     hospitalisation_diagnosis_matches,
+    practice_registration_as_of,
 )
 
 
@@ -123,10 +123,12 @@ dataset.covidadmitted_01 = (
 )
 
 # TODO composite variable:
-dataset.any_infection_or_disease_01 = (dataset.postest_01 |
-                                       dataset.primary_care_covid_case_01 |
-                                       dataset.covidemergency_01 |
-                                       dataset.covidadmitted_01)
+dataset.any_infection_or_disease_01 = (
+    dataset.postest_01
+    | dataset.primary_care_covid_case_01
+    | dataset.covidemergency_01
+    | dataset.covidadmitted_01
+)
 
 # 14-day events (Did any event occur within the last 14 days?) ----
 # https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L372-L443
@@ -168,10 +170,12 @@ dataset.covidadmitted_14 = (
     .exists_for_patient()
 )
 # TODO composite variable: any_infection_or_disease_14
-dataset.any_infection_or_disease_14 = (dataset.postest_14 |
-                                       dataset.primary_care_covid_case_14 |
-                                       dataset.covidemergency_14 |
-                                       dataset.covidadmitted_14)
+dataset.any_infection_or_disease_14 = (
+    dataset.postest_14
+    | dataset.primary_care_covid_case_14
+    | dataset.covidemergency_14
+    | dataset.covidadmitted_14
+)
 
 # Ever-day events (Did any event occur any time up to and including this day?) ----
 # https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L445-L517
@@ -204,10 +208,12 @@ dataset.covidadmitted_ever = (
 )
 
 # TODO composite variable:
-dataset.any_infection_or_disease_ever = (dataset.postest_ever |
-                                         dataset.primary_care_covid_case_ever |
-                                         dataset.covidemergency_ever |
-                                         dataset.covidadmitted_ever)
+dataset.any_infection_or_disease_ever = (
+    dataset.postest_ever
+    | dataset.primary_care_covid_case_ever
+    | dataset.covidemergency_ever
+    | dataset.covidadmitted_ever
+)
 # Define dataset restrictions ----
 set_registered = practice_registrations.exists_for_patient()
 set_sex_fm = (dataset.sex == "female") | (dataset.sex == "male")
