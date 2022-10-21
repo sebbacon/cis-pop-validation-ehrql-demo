@@ -39,6 +39,9 @@ def test_dataset_definition():
         "covidadmitted_01": "T",
         "covidadmitted_14": "T",
         "covidadmitted_ever": "T",
+        "any_infection_or_disease_01": "T",
+        "any_infection_or_disease_14": "T",
+        "any_infection_or_disease_ever": "T",
     }
     assert pt3 == {
         "patient_id": 3,
@@ -62,6 +65,9 @@ def test_dataset_definition():
         "covidadmitted_01": "F",
         "covidadmitted_14": "T",
         "covidadmitted_ever": "T",
+        "any_infection_or_disease_01": "F",
+        "any_infection_or_disease_14": "T",
+        "any_infection_or_disease_ever": "T",
     }
     assert pt7 == {
         "patient_id": 7,
@@ -85,4 +91,7 @@ def test_dataset_definition():
         "covidadmitted_01": "F",
         "covidadmitted_14": "F",
         "covidadmitted_ever": "T",
+        "any_infection_or_disease_01": "F",
+        "any_infection_or_disease_14": "F",
+        "any_infection_or_disease_ever": "T",
     }
