@@ -1,9 +1,7 @@
 from datetime import date, timedelta
 
-from databuilder.codes import Codelist
 from databuilder.ehrql import Dataset, case, when
 from databuilder.tables.beta.tpp import (
-    addresses,
     clinical_events,
     emergency_care_attendances,
     hospital_admissions,
@@ -14,6 +12,8 @@ from databuilder.tables.beta.tpp import (
 
 import codelists
 from analysis.variable_lib import (
+    has_prior_event,
+    combine_codelists,
     address_as_of,
     age_as_of,
     emergency_care_diagnosis_matches,
@@ -22,35 +22,8 @@ from analysis.variable_lib import (
     practice_registration_as_of,
 )
 
-
-def has_prior_event(codelist, where=True):
-    return (
-        prior_events.take(where)
-        .take(prior_events.snomedct_code.is_in(codelist))
-        .exists_for_patient()
-    )
-
-
-def combine_codelists(*codelists):
-    codes = set()
-    for codelist in codelists:
-        codes.update(codelist.codes)
-    return Codelist(codes=codes, category_maps={})
-
-
-# Set index date ----
-# TODO this is just an example for testing, something like --index-date-range
-# needs to be added https://github.com/opensafely-core/databuilder/issues/741
-index_date = date(2022, 6, 1)
-
-
-# Initialize dataset ----
-dataset = Dataset()
-
-# Extract some variables into separate objects
-address = address_as_of(index_date)
-
-
+# COMBINE CODELISTS
+# contraining primary care covid events
 primary_care_covid_events = clinical_events.take(
     clinical_events.ctv3_code.is_in(
         combine_codelists(
@@ -61,18 +34,33 @@ primary_care_covid_events = clinical_events.take(
     )
 )
 
+# Set index date
+# TODO this is just an example for testing, something like --index-date-range
+# needs to be added https://github.com/opensafely-core/databuilder/issues/741
+index_date = date(2022, 6, 1)
 
+# Create dataset
+dataset = Dataset()
+
+###############################################################################
+# Preprocessing data for later use
+###############################################################################
+
+address = address_as_of(index_date)
 prior_events = clinical_events.take(clinical_events.date.is_on_or_before(index_date))
-
-# Define and extract dataset variables ----
-# Demographic variables
-dataset.sex = patients.sex
-dataset.age = age_as_of(index_date)
-dataset.has_died = has_died(index_date)
 practice_reg = practice_registration_as_of(index_date)
 prior_tests = sgss_covid_all_tests.take(
     sgss_covid_all_tests.specimen_taken_date.is_on_or_before(index_date)
 )
+
+###############################################################################
+# Define and extract demographic dataset variables
+###############################################################################
+
+# Demographic variables
+dataset.sex = patients.sex
+dataset.age = age_as_of(index_date)
+dataset.has_died = has_died(index_date)
 
 # TPP care home flag
 dataset.care_home_tpp = case(
@@ -80,9 +68,9 @@ dataset.care_home_tpp = case(
 )
 
 # Patients in long-stay nursing and residential care
-dataset.care_home_code = has_prior_event(codelists.carehome)
+dataset.care_home_code = has_prior_event(clinical_events, codelists.carehome)
 
-# Middle Super Output Area
+# Middle Super Output Area (MSOA)
 dataset.msoa = address.msoa_code
 
 # STP is an NHS administration region based on geography
@@ -91,17 +79,22 @@ dataset.stp = practice_reg.practice_stp
 # NHS administrative region
 dataset.region = practice_reg.practice_nuts1_region_name
 
-# Single-day events (Did any event occur on this day?) ----
-# https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L300-L369
+###############################################################################
+# Define and extract SINGLE-DAY EVENTS
+# Did any event occur on this day?
+###############################################################################
+
+# Positive COVID test
 dataset.postest_01 = prior_tests.take(
     (prior_tests.specimen_taken_date == index_date) & (prior_tests.is_positive)
 ).exists_for_patient()
 
+# Positive case identification
 dataset.primary_care_covid_case_01 = primary_care_covid_events.take(
     (clinical_events.date == index_date)
 ).exists_for_patient()
 
-# TODO emergency attendance for covid: covidemergency_01
+# Emergency attendance for COVID
 dataset.covidemergency_01 = (
     emergency_care_diagnosis_matches(
         emergency_care_attendances, codelists.covid_emergency
@@ -110,7 +103,7 @@ dataset.covidemergency_01 = (
     .exists_for_patient()
 )
 
-# TODO covid admission:
+# COVID hospital admission
 dataset.covidadmitted_01 = (
     hospitalisation_diagnosis_matches(hospital_admissions, codelists.covid_icd10)
     .take(hospital_admissions.admission_date == index_date)
@@ -122,7 +115,7 @@ dataset.covidadmitted_01 = (
     .exists_for_patient()
 )
 
-# TODO composite variable:
+# Composite single-day variable
 dataset.any_infection_or_disease_01 = (
     dataset.postest_01
     | dataset.primary_care_covid_case_01
@@ -130,21 +123,25 @@ dataset.any_infection_or_disease_01 = (
     | dataset.covidadmitted_01
 )
 
-# 14-day events (Did any event occur within the last 14 days?) ----
-# https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L372-L443
+###############################################################################
+# Define and extract 14-DAY EVENTS
+# Did any event occur within the last 14 days?
+###############################################################################
+
+# Positive COVID test
 dataset.postest_14 = prior_tests.take(
     (prior_tests.specimen_taken_date >= (index_date - timedelta(days=14)))
     & (prior_tests.specimen_taken_date <= index_date)
     & (prior_tests.is_positive)
 ).exists_for_patient()
 
-# TODO positive case identification:
+# Positive case identification
 dataset.primary_care_covid_case_14 = primary_care_covid_events.take(
     (clinical_events.date >= (index_date - timedelta(days=14)))
     & (clinical_events.date <= index_date)
 ).exists_for_patient()
 
-# TODO emergency attendance for covid:
+# Emergency attendance for COVID
 dataset.covidemergency_14 = (
     emergency_care_diagnosis_matches(
         emergency_care_attendances, codelists.covid_emergency
@@ -155,7 +152,8 @@ dataset.covidemergency_14 = (
     )
     .exists_for_patient()
 )
-# TODO covid admission:
+
+# COVID hospital admission
 dataset.covidadmitted_14 = (
     hospitalisation_diagnosis_matches(hospital_admissions, codelists.covid_icd10)
     .take(
@@ -169,7 +167,8 @@ dataset.covidadmitted_14 = (
     )
     .exists_for_patient()
 )
-# TODO composite variable: any_infection_or_disease_14
+
+# Composite 14-day variable
 dataset.any_infection_or_disease_14 = (
     dataset.postest_14
     | dataset.primary_care_covid_case_14
@@ -177,16 +176,22 @@ dataset.any_infection_or_disease_14 = (
     | dataset.covidadmitted_14
 )
 
-# Ever-day events (Did any event occur any time up to and including this day?) ----
-# https://github.com/opensafely/CIS-pop-validation/blob/889723139089e4ab146862d6fba1f410cf35b8c4/analysis/study_definition.py#L445-L517
+###############################################################################
+# Define and extract EVER-DAY EVENTS
+# Did any event occur any time up to and including this day?
+###############################################################################
+
+# Positive COVID test
 dataset.postest_ever = prior_tests.take(
     (prior_tests.specimen_taken_date <= index_date) & (prior_tests.is_positive)
 ).exists_for_patient()
-# TODO positive case identification:
+
+# Positive case identification
 dataset.primary_care_covid_case_ever = primary_care_covid_events.take(
     (clinical_events.date <= index_date)
 ).exists_for_patient()
-# TODO emergency attendance for covid:
+
+# Emergency attendance for COVID
 dataset.covidemergency_ever = (
     emergency_care_diagnosis_matches(
         emergency_care_attendances, codelists.covid_emergency
@@ -195,7 +200,7 @@ dataset.covidemergency_ever = (
     .exists_for_patient()
 )
 
-# TODO covid admission:
+# COVID hospital admission
 dataset.covidadmitted_ever = (
     hospitalisation_diagnosis_matches(hospital_admissions, codelists.covid_icd10)
     .take((hospital_admissions.admission_date <= index_date))
@@ -207,20 +212,27 @@ dataset.covidadmitted_ever = (
     .exists_for_patient()
 )
 
-# TODO composite variable:
+# Composite "ever" variable
 dataset.any_infection_or_disease_ever = (
     dataset.postest_ever
     | dataset.primary_care_covid_case_ever
     | dataset.covidemergency_ever
     | dataset.covidadmitted_ever
 )
-# Define dataset restrictions ----
+
+###############################################################################
+# Define dataset restrictions
+###############################################################################
+
 set_registered = practice_registrations.exists_for_patient()
 set_sex_fm = (dataset.sex == "female") | (dataset.sex == "male")
 set_age_ge2_le120 = (dataset.age >= 2) & (dataset.age <= 120)
 set_has_not_died = ~dataset.has_died
 
-# Set study population ----
+###############################################################################
+# Apply dataset restrictions and define study population
+###############################################################################
+
 dataset.set_population(
     set_registered & set_sex_fm & set_age_ge2_le120 & set_has_not_died
 )
