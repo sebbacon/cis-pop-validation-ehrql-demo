@@ -11,7 +11,7 @@ actions:
     # doing.
     run: databuilder:v0
       generate-dataset analysis/dataset_definition.py --output output/dataset.csv
-      --dsn dummy_data --query-engine csv --backend databuilder.backends.base.DefaultBackend
+      --dummy-tables dummy_data
     outputs:
       highly_sensitive:
         cohort: output/dataset.csv
