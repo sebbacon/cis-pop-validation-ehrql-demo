@@ -6,9 +6,6 @@ expectations:
 actions:
 
   generate_dataset:
-    # The final line of arguments are workarounds for the fact that we don't
-    # have dummy data working yet, so don't worry about exactly what they're
-    # doing.
     run: databuilder:v0
       generate-dataset analysis/dataset_definition.py --output output/dataset.csv
       --dummy-tables dummy_data
